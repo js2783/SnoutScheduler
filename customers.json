@@ -1,0 +1,69 @@
+{
+    "customers": [
+        {
+            "clientID": 1,
+            "last_name": "Stichter",
+            "first_name": "Aaron",
+            "phone_number": 6732384982,
+            "email": "aaronstichter@email.com",
+            "pet": 
+                {
+                    "name": "Terry",
+                    "species": "Dog",
+                    "treatment": ["bath", "nail_trim"]
+                }
+        },
+        {
+            "clientID": 2,
+            "last_name": "Smith",
+            "first_name": "Jody",
+            "phone_number": 1093938204,
+            "email": "jodysmith@email.com",
+            "pet": 
+                {
+                    "name": "Moose",
+                    "species": "Dog",
+                    "treatment": ["bath", "nail_trim"]
+                }
+        },
+        {
+            "clientID": 3,
+            "last_name": "Gutierrez",
+            "first_name": "Jacqueline",
+            "phone_number": 2830495725,
+            "email": "jacquelinegutierrez@email.com",
+            "pet": 
+                {
+                    "name": "Silas",
+                    "species": "Dog",
+                    "treatment": ["bath"]
+                }
+        },
+        {
+            "clientID": 4,
+            "last_name": "Meyer",
+            "first_name": "James",
+            "phone_number": 7582058467,
+            "email": "jamesmeyer@email.com",
+            "pet": 
+                {
+                    "name": "Sprinkles",
+                    "species": "Cat",
+                    "treatment": ["nail_trim"]
+                }
+        },
+        {
+            "clientID": 5,
+            "last_name": "Tillman",
+            "first_name": "Landen",
+            "phone_number": 3762859012,
+            "email": "landentillman@email.com",
+            "pet": 
+                {
+                    "name": "Shadow",
+                    "species": "Cat",
+                    "treatment": ["bath", "nail_trim"]
+                }
+        }
+    ]
+}
