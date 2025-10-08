@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Service  
+from .models import Post, Service   # ✅ include Service here
 
 # Keep your teammate’s Post model
 admin.site.register(Post)
