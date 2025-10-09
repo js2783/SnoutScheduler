@@ -8,8 +8,11 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
-    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles','booking',
+    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
+    'booking',
+    'services_table',    # ← add this
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
