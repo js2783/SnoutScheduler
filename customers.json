@@ -36,7 +36,7 @@
                 {
                     "name": "Silas",
                     "species": "Dog",
-                    "treatment": ["bath"]
+                    "treatment": ["bath", "haircut"]
                 }
         },
         {
@@ -64,6 +64,66 @@
                     "species": "Cat",
                     "treatment": ["bath", "nail_trim"]
                 }
+        },
+        {
+            "clientID": 6,
+            "last_name": "Nguyen",
+            "first_name": "Mai",
+            "phone_number": 2125550198,
+            "email": "mainguyen@email.com",
+            "pet": {
+                "name": "Biscuit",
+                "species": "Dog",
+                "treatment": ["bath", "haircut"]
+            }
+        },
+        {
+            "clientID": 7,
+            "last_name": "Patel",
+            "first_name": "Rohan",
+            "phone_number": 4155550234,
+            "email": "rohanpatel@email.com",
+            "pet": {
+                "name": "Whiskers",
+                "species": "Cat",
+                "treatment": ["bath", "nail_trim"]
+            }
+        },
+        {
+            "clientID": 8,
+            "last_name": "O'Connor",
+            "first_name": "Fiona",
+            "phone_number": 6175550456,
+            "email": "fionao@email.com",
+            "pet": {
+                "name": "Pippin",
+                "species": "Dog",
+                "treatment": ["haircut", "nail_trim"]
+            }
+        },
+        {
+            "clientID": 9,
+            "last_name": "Garcia",
+            "first_name": "Luis",
+            "phone_number": 3035550678,
+            "email": "luisgarcia@email.com",
+            "pet": {
+                "name": "Rocky",
+                "species": "Dog",
+                "treatment": ["haircut", "nail_trim"]
+            }
+        },
+        {
+            "clientID": 10,
+            "last_name": "Bennett",
+            "first_name": "Ava",
+            "phone_number": 7025550890,
+            "email": "avabennett@email.com",
+            "pet": {
+                "name": "Mittens",
+                "species": "Cat",
+                "treatment": ["bath", "nail_trim"]
+            }
         }
     ]
 }
