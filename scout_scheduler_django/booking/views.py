@@ -2,21 +2,158 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from .forms import BookingForm
 from .api import ApiClient
+from .models import Customer, Booking
+from django.db import transaction
+from django.shortcuts import render, get_object_or_404
+from .models import Booking, Customer
+from django.core.paginator import Paginator
+from datetime import date
+from django.utils import timezone
+from django.http import JsonResponse
+
 
 def book(request):
-    api=ApiClient()
-    banner='New customers – Call us to set up your account!'
-    if request.method=='POST':
-        f=BookingForm(request.POST)
-        if f.is_valid():
-            cd=f.cleaned_data
-            lookup=api.find_customer(cd['customer_first_name'],cd['customer_last_name'],cd['phone'])
-            if not lookup['found']:
-                f.add_error('phone','Customer not found.')
-            else:
-                ref=api.submit_appointment_request(cd)['ref']
-                return redirect(reverse('success',kwargs={'ref':ref}))
-    else: f=BookingForm()
-    return render(request,'book.html',{'form':f,'banner':banner})
+    api = ApiClient()
+    banner = 'New customers – Call us to set up your account!'
 
-def success(request,ref): return render(request,'success.html',{'ref':ref})
+    if request.method == 'POST':
+        f = BookingForm(request.POST)
+        if f.is_valid():
+            cd = f.cleaned_data #This is the clean data after the validation took place.
+
+            
+            try:
+                services = [int(s) for s in cd.get('services', [])]
+            except ValueError:
+                f.add_error('services','Invalid service selection.')
+                return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            groomer_id = None
+            if cd.get('groomer'):
+                try:
+                    groomer_id = int(cd['groomer'])
+                except ValueError:
+                    f.add_error('groomer','Invalid groomer selection.')
+                    return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            appt_date = cd.get('appointment_date')            
+            appt_time = cd.get('appointment_time')            
+
+            #Does a check to prevent double booking. 
+            if groomer_id is not None and appt_date and appt_time:
+                conflict_qs = Booking.objects.filter(
+                    groomer_id=groomer_id,
+                    appointment_date=appt_date,
+                    appointment_time=appt_time
+                )
+                if conflict_qs.exists():
+                    f.add_error(None, "That groomer already has a booking at the selected date and time. Please choose another time or groomer.")
+                    return render(request,'booking/book.html',{'form':f,'banner':banner})
+            
+
+            
+            try:
+                lookup = api.find_customer(cd['customer_first_name'], cd['customer_last_name'], cd['phone'])
+            except Exception as exc:
+                f.add_error(None, f'Error checking customer: {exc}')
+                return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            if not lookup.get('found'):
+                f.add_error('phone', 'Customer not found. Please call to set up an account.')
+                return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            payload = {
+                "customer_first_name": cd['customer_first_name'],
+                "customer_last_name": cd['customer_last_name'],
+                "phone": cd['phone'],
+                "pet_name": cd.get('pet_name'),
+                "service_ids": services,
+                "groomer_id": groomer_id,
+                "appointment_date": appt_date.isoformat() if appt_date else None,
+                "appointment_time": appt_time,
+            }
+            #Submits the appointment.
+            try:
+                result = api.submit_appointment_request(payload)
+            except Exception as exc:
+                f.add_error(None, f"Could not submit appointment: {exc}")
+                return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            ref = result.get('ref')
+            if not ref:
+                f.add_error(None, "Appointment created but server did not return a reference.")
+                return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            
+            try:
+                with transaction.atomic():
+                    customer_obj, created = Customer.objects.get_or_create(
+                        first_name=cd['customer_first_name'],
+                        last_name=cd['customer_last_name'],
+                        phone=cd['phone']
+                    )
+                    booking_obj = Booking.objects.create(
+                        customer=customer_obj,
+                        pet_name=cd.get('pet_name'),
+                        services=services,
+                        groomer_id=groomer_id,
+                        appointment_date=appt_date,
+                        appointment_time=appt_time,
+                        api_ref=ref,
+                        api_payload=payload,
+                        api_response=result,
+                    )
+            except Exception as exc:
+                f.add_error(None, f"Saved remotely but failed to save locally: {exc}")
+                return render(request,'booking/book.html',{'form':f,'banner':banner})
+
+            return redirect(reverse('booking:success', kwargs={'ref': ref}))
+    #Creates an empty form after completion
+    else:
+        f = BookingForm()
+
+    return render(request,'booking/book.html',{'form':f,'banner':banner})
+#This will show the user that there booking request was successful.
+def success(request, ref):
+    return render(request,'booking/success.html',{'ref':ref})
+
+
+def bookings_list(request):
+    # show most recent first
+    qs = Booking.objects.select_related('customer').order_by('-appointment_date', '-appointment_time', '-created_at')
+    
+
+    # Allows the user to see 25 appointments per page. Can be adjusted to however many we want.
+    paginator = Paginator(qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'booking/bookings_list.html', {'page_obj': page_obj})
+
+def booking_detail(request, pk):
+    booking = get_object_or_404(Booking.objects.select_related('customer'), pk=pk)
+    return render(request, 'booking/booking_detail.html', {'booking': booking})
+
+def availability_json(request):
+    groomer = request.GET.get('groomer')
+    date = request.GET.get('date')
+    booked = []
+    if groomer and date:
+        booked = list(Booking.objects.filter(groomer_id=int(groomer), appointment_date=date).values_list('appointment_time', flat=True))
+    return JsonResponse({'booked': booked})
+
+def bookings_list(request):
+    qs = Booking.objects.select_related('customer').order_by('-appointment_date', '-appointment_time', '-created_at')
+    paginator = Paginator(qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    
+    api = ApiClient()
+    groomer_lookup = {str(g['id']): g['name'] for g in api.list_groomers()}
+
+    # attach a groomer_name property to each booking
+    for b in page_obj.object_list:
+        b.groomer_name = groomer_lookup.get(str(b.groomer_id), f"Groomer {b.groomer_id or '—'}")
+#This returns the JSON with all the booked times that were inputted. 
+    return render(request, 'booking/bookings_list.html', {'page_obj': page_obj})

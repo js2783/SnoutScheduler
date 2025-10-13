@@ -1,0 +1,14 @@
+{% extends "booking/base.html" %}
+{% block title %}Booking Saved - Scout Scheduler{% endblock %}
+
+{% block content %}
+  <h2>Booking saved</h2>
+
+  <p>Thank you — your booking has been created.</p>
+  <p><strong>Reference:</strong> {{ ref }}</p>
+
+  <p>
+    <a href="{% url 'booking:list' %}" class="btn">View bookings</a>
+    <a href="{% url 'booking:book' %}" style="margin-left:12px;">Create another</a>
+  </p>
+{% endblock %}

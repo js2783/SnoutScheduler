@@ -1,0 +1,51 @@
+{% extends "booking/base.html" %}
+{% block title %}Bookings - Scout Scheduler{% endblock %}
+
+{% block content %}
+  <h2>Bookings</h2>
+
+  <p><a href="{% url 'booking:book' %}" class="btn">Create new booking</a></p>
+
+  {% if page_obj.object_list %}
+    <table aria-label="Bookings table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Pet</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Groomer</th>
+          <th>API Ref</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bk in page_obj.object_list %}
+          <tr>
+            <td><a href="{% url 'booking:detail' bk.pk %}">{{ bk.id }}</a></td>
+            <td>{% if bk.customer %}{{ bk.customer.first_name }} {{ bk.customer.last_name }}{% else %}—{% endif %}</td>
+            <td>{% if bk.customer %}{{ bk.customer.phone }}{% else %}—{% endif %}</td>
+            <td>{{ bk.pet_name|default:"—" }}</td>
+            <td>{{ bk.appointment_date|date:"Y-m-d" }}</td>
+            <td>{{ bk.appointment_time }}</td>
+            <td>{{ bk.groomer_name|default:"—" }}</td>
+            <td>{{ bk.api_ref|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="margin-top:12px;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+      {% endif %}
+      <span> Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <p>No bookings yet.</p>
+  {% endif %}
+{% endblock %}

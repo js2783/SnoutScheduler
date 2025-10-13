@@ -1,0 +1,77 @@
+{% extends "booking/base.html" %}
+{% block title %}New Booking - Scout Scheduler{% endblock %}
+
+{% block content %}
+  <h2>New Booking</h2>
+  <p>{{ banner }}</p>
+
+  {% if form.non_field_errors %}
+    <div class="errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <fieldset style="border:1px solid #e6e6e6; padding:12px; margin-bottom:12px;">
+      <legend>Customer</legend>
+      <p>
+        {{ form.customer_first_name.label_tag }}<br>
+        {{ form.customer_first_name }}
+        {% if form.customer_first_name.errors %}<div class="errors">{{ form.customer_first_name.errors }}</div>{% endif %}
+      </p>
+
+      <p>
+        {{ form.customer_last_name.label_tag }}<br>
+        {{ form.customer_last_name }}
+        {% if form.customer_last_name.errors %}<div class="errors">{{ form.customer_last_name.errors }}</div>{% endif %}
+      </p>
+
+      <p>
+        {{ form.phone.label_tag }}<br>
+        {{ form.phone }}
+        {% if form.phone.errors %}<div class="errors">{{ form.phone.errors }}</div>{% endif %}
+      </p>
+    </fieldset>
+
+    <fieldset style="border:1px solid #e6e6e6; padding:12px; margin-bottom:12px;">
+      <legend>Pet & Service</legend>
+      <p>
+        {{ form.pet_name.label_tag }}<br>
+        {{ form.pet_name }}
+        {% if form.pet_name.errors %}<div class="errors">{{ form.pet_name.errors }}</div>{% endif %}
+      </p>
+
+      <p>
+        {{ form.services.label_tag }}<br>
+        {{ form.services }}
+        {% if form.services.errors %}<div class="errors">{{ form.services.errors }}</div>{% endif %}
+      </p>
+    </fieldset>
+
+    <fieldset style="border:1px solid #e6e6e6; padding:12px; margin-bottom:12px;">
+      <legend>Appointment</legend>
+      <p>
+        {{ form.groomer.label_tag }}<br>
+        {{ form.groomer }}
+        {% if form.groomer.errors %}<div class="errors">{{ form.groomer.errors }}</div>{% endif %}
+      </p>
+
+      <p>
+        {{ form.appointment_date.label_tag }}<br>
+        {{ form.appointment_date }}
+        {% if form.appointment_date.errors %}<div class="errors">{{ form.appointment_date.errors }}</div>{% endif %}
+      </p>
+
+      <p>
+        {{ form.appointment_time.label_tag }}<br>
+        {{ form.appointment_time }}
+        {% if form.appointment_time.errors %}<div class="errors">{{ form.appointment_time.errors }}</div>{% endif %}
+      </p>
+    </fieldset>
+
+    <p>
+      <button type="submit" class="btn">Submit booking</button>
+      <a href="{% url 'booking:list' %}" style="margin-left:12px;">Cancel</a>
+    </p>
+  </form>
+{% endblock %}
