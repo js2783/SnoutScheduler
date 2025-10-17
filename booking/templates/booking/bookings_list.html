@@ -18,19 +18,44 @@
           <th>Time</th>
           <th>Groomer</th>
           <th>API Ref</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for bk in page_obj.object_list %}
           <tr>
             <td><a href="{% url 'booking:detail' bk.pk %}">{{ bk.id }}</a></td>
-            <td>{% if bk.customer %}{{ bk.customer.first_name }} {{ bk.customer.last_name }}{% else %}—{% endif %}</td>
-            <td>{% if bk.customer %}{{ bk.customer.phone }}{% else %}—{% endif %}</td>
+            <td>
+              {% if bk.customer %}
+                {{ bk.customer.first_name }} {{ bk.customer.last_name }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if bk.customer %}
+                {{ bk.customer.phone }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
             <td>{{ bk.pet_name|default:"—" }}</td>
             <td>{{ bk.appointment_date|date:"Y-m-d" }}</td>
             <td>{{ bk.appointment_time }}</td>
             <td>{{ bk.groomer_name|default:"—" }}</td>
             <td>{{ bk.api_ref|default:"—" }}</td>
+
+            <td>
+              {% if not bk.canceled and bk.status != 'canceled' %}
+                <form method="post" action="{% url 'booking:cancel' bk.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.path }}">
+                  <button type="submit" onclick="return confirm('Cancel this booking?');">Cancel</button>
+                </form>
+              {% else %}
+                <span class="badge">Canceled</span>
+              {% endif %}
+            </td>
           </tr>
         {% endfor %}
       </tbody>

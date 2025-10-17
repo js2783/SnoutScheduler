@@ -10,7 +10,8 @@ from django.core.paginator import Paginator
 from datetime import date
 from django.utils import timezone
 from django.http import JsonResponse
-
+from django.views.decorators.http import require_POST
+from django.contrib import messages
 
 def book(request):
     api = ApiClient()
@@ -157,3 +158,37 @@ def bookings_list(request):
         b.groomer_name = groomer_lookup.get(str(b.groomer_id), f"Groomer {b.groomer_id or '—'}")
 #This returns the JSON with all the booked times that were inputted. 
     return render(request, 'booking/bookings_list.html', {'page_obj': page_obj})
+
+@require_POST
+def cancel_booking(request, pk):
+    booking = get_object_or_404(Booking, pk=pk)
+
+    # Prefer a soft-cancel
+    if hasattr(booking, "canceled"):
+        if booking.canceled:
+            messages.info(request, "This booking is already canceled.")
+        else:
+            booking.canceled = True
+            if hasattr(booking, "canceled_at"):
+                booking.canceled_at = timezone.now()
+            # update only fields that exist
+            fields = ["canceled"] + (["canceled_at"] if hasattr(booking, "canceled_at") else [])
+            booking.save(update_fields=fields)
+            messages.success(request, "Booking canceled.")
+    elif hasattr(booking, "status"):
+        if getattr(booking, "status") == "canceled":
+            messages.info(request, "This booking is already canceled.")
+        else:
+            booking.status = "canceled"
+            if hasattr(booking, "canceled_at"):
+                booking.canceled_at = timezone.now()
+            fields = ["status"] + (["canceled_at"] if hasattr(booking, "canceled_at") else [])
+            booking.save(update_fields=fields)
+            messages.success(request, "Booking canceled.")
+    else:
+        # Hard delete as last resort
+        booking.delete()
+        messages.warning(request, "Successfully Cancelled Appointment!")
+
+    # Go back to the list (or use hidden input 'next' if provided)
+    return redirect(request.POST.get("next") or "booking:list")

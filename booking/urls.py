@@ -8,5 +8,7 @@ urlpatterns = [
     path('success/<str:ref>/', views.success, name='success'),
     path('', views.bookings_list, name='list'),            
     path('<int:pk>/', views.booking_detail, name='detail'),
-    path('availability/', views.availability_json, name='availability')
+    path('<int:pk>/cancel/', views.cancel_booking, name='cancel'),
+    path('availability/', views.availability_json, name='availability'),
+   
 ]
