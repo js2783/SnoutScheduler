@@ -10,5 +10,5 @@ urlpatterns = [
     path('<int:pk>/', views.booking_detail, name='detail'),
     path('<int:pk>/cancel/', views.cancel_booking, name='cancel'),
     path('availability/', views.availability_json, name='availability'),
-   
+   path('<int:pk>/edit/', views.edit_booking, name='edit'),
 ]

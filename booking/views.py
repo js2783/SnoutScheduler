@@ -192,3 +192,14 @@ def cancel_booking(request, pk):
 
     # Go back to the list (or use hidden input 'next' if provided)
     return redirect(request.POST.get("next") or "booking:list")
+
+def edit_booking(request, pk):
+    booking = get_object_or_404(Booking, pk=pk)
+    if request.method == 'POST':
+        form = BookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            form.save()
+            return redirect('booking:list')
+    else:
+        form = BookingForm(instance=booking)
+    return render(request, 'booking/book.html', {'form': form})
