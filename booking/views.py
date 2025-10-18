@@ -14,30 +14,32 @@ def book(request):
     api = ApiClient()
     banner = 'New customers – Call us to set up your account!'
 
+    # Prepare all available time slots for the template
+    all_time_slots = api.list_time_slots('')
+
     if request.method == 'POST':
         f = BookingForm(request.POST)
         if f.is_valid():
-            cd = f.cleaned_data #This is the clean data after the validation took place.
+            cd = f.cleaned_data  # This is the clean data after validation
 
-            
             try:
                 services = [int(s) for s in cd.get('services', [])]
             except ValueError:
                 f.add_error('services','Invalid service selection.')
-                return render(request,'booking/book.html',{'form':f,'banner':banner})
+                return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
 
-            groomer_id = None
+            groomer_id = None      #Converts groomer ID to an integer
             if cd.get('groomer'):
                 try:
                     groomer_id = int(cd['groomer'])
                 except ValueError:
                     f.add_error('groomer','Invalid groomer selection.')
-                    return render(request,'booking/book.html',{'form':f,'banner':banner})
+                    return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
 
-            appt_date = cd.get('appointment_date')            
-            appt_time = cd.get('appointment_time')            
+            appt_date = cd.get('appointment_date')
+            appt_time = cd.get('appointment_time')
 
-            #Does a check to prevent double booking. 
+            # Check for double booking
             if groomer_id is not None and appt_date and appt_time:
                 conflict_qs = Booking.objects.filter(
                     groomer_id=groomer_id,
@@ -46,20 +48,18 @@ def book(request):
                 )
                 if conflict_qs.exists():
                     f.add_error(None, "That groomer already has a booking at the selected date and time. Please choose another time or groomer.")
-                    return render(request,'booking/book.html',{'form':f,'banner':banner})
-            
+                    return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
 
-            
             try:
                 lookup = api.find_customer(cd['customer_first_name'], cd['customer_last_name'], cd['phone'])
             except Exception as exc:
                 f.add_error(None, f'Error checking customer: {exc}')
-                return render(request,'booking/book.html',{'form':f,'banner':banner})
+                return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
 
             if not lookup.get('found'):
                 f.add_error('phone', 'Customer not found. Please call to set up an account.')
-                return render(request,'booking/book.html',{'form':f,'banner':banner})
-
+                return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
+            #Prepares to submit the appointment to the API
             payload = {
                 "customer_first_name": cd['customer_first_name'],
                 "customer_last_name": cd['customer_last_name'],
@@ -70,19 +70,18 @@ def book(request):
                 "appointment_date": appt_date.isoformat() if appt_date else None,
                 "appointment_time": appt_time,
             }
-            #Submits the appointment.
+
             try:
                 result = api.submit_appointment_request(payload)
             except Exception as exc:
                 f.add_error(None, f"Could not submit appointment: {exc}")
-                return render(request,'booking/book.html',{'form':f,'banner':banner})
+                return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
 
             ref = result.get('ref')
             if not ref:
                 f.add_error(None, "Appointment created but server did not return a reference.")
-                return render(request,'booking/book.html',{'form':f,'banner':banner})
-
-            
+                return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
+            #Saves the booking
             try:
                 with transaction.atomic():
                     customer_obj, created = Customer.objects.get_or_create(
@@ -103,14 +102,19 @@ def book(request):
                     )
             except Exception as exc:
                 f.add_error(None, f"Saved remotely but failed to save locally: {exc}")
-                return render(request,'booking/book.html',{'form':f,'banner':banner})
-
+                return render(request,'booking/book.html',{'form':f,'banner':banner,'all_time_slots':all_time_slots})
+                #Redirects to the success page. 
             return redirect(reverse('booking:success', kwargs={'ref': ref}))
-    #Creates an empty form after completion
+
     else:
         f = BookingForm()
 
-    return render(request,'booking/book.html',{'form':f,'banner':banner})
+    return render(request, 'booking/book.html', {
+        'form': f,
+        'banner': banner,
+        'all_time_slots': all_time_slots,  # Pass to template
+    })
+
 #This will show the user that there booking request was successful.
 def success(request, ref):
     return render(request,'booking/success.html',{'ref':ref})

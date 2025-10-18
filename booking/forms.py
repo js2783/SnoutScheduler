@@ -10,9 +10,9 @@ class BookingForm(forms.Form):
     phone = forms.CharField(max_length=25)
     pet_name = forms.CharField(max_length=50, required=False)
     services = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple)
-    groomer = forms.ChoiceField()
+    groomer = forms.ChoiceField(required=False)
     appointment_date = forms.DateField(widget=forms.DateInput(attrs={'type':'date'}))
-    appointment_time = forms.ChoiceField()
+    appointment_time = forms.ChoiceField(required=False)
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
@@ -49,9 +49,12 @@ class BookingForm(forms.Form):
         appt_date = cleaned.get('appointment_date')
         appt_time = cleaned.get('appointment_time')
         if groomer and appt_date and appt_time:
-            # Check local DB for conflict
-            if Booking.objects.filter(groomer_id=groomer, appointment_date=appt_date, appointment_time=appt_time).exists():
-                raise ValidationError("That groomer already has a booking at the selected date and time.")
+            if Booking.objects.filter(
+                groomer_id=groomer,
+                appointment_date=appt_date,
+                appointment_time=appt_time
+            ).exists():
+                raise ValidationError("That groomer already has a booking at the selected date and time.") #Verifies if the grooms is already booked and displays error if so. 
         return cleaned
     
     

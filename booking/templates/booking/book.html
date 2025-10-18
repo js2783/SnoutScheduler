@@ -2,76 +2,160 @@
 {% block title %}New Booking - Scout Scheduler{% endblock %}
 
 {% block content %}
-  <h2>New Booking</h2>
-  <p>{{ banner }}</p>
+<h2>New Booking</h2>
+<p>{{ banner }}</p>
 
-  {% if form.non_field_errors %}
-    <div class="errors">{{ form.non_field_errors }}</div>
-  {% endif %}
+{% if form.non_field_errors %}
+  <div class="errors">{{ form.non_field_errors }}</div>
+{% endif %}
 
-  <form method="post" novalidate>
+<form method="post" novalidate>
     {% csrf_token %}
 
+    <!-- Customer Info -->
     <fieldset style="border:1px solid #e6e6e6; padding:12px; margin-bottom:12px;">
-      <legend>Customer</legend>
-      <p>
-        {{ form.customer_first_name.label_tag }}<br>
-        {{ form.customer_first_name }}
-        {% if form.customer_first_name.errors %}<div class="errors">{{ form.customer_first_name.errors }}</div>{% endif %}
-      </p>
-
-      <p>
-        {{ form.customer_last_name.label_tag }}<br>
-        {{ form.customer_last_name }}
-        {% if form.customer_last_name.errors %}<div class="errors">{{ form.customer_last_name.errors }}</div>{% endif %}
-      </p>
-
-      <p>
-        {{ form.phone.label_tag }}<br>
-        {{ form.phone }}
-        {% if form.phone.errors %}<div class="errors">{{ form.phone.errors }}</div>{% endif %}
-      </p>
+        <legend>Customer</legend>
+        <p>
+            {{ form.customer_first_name.label_tag }}<br>
+            {{ form.customer_first_name }}
+            {% if form.customer_first_name.errors %}<div class="errors">{{ form.customer_first_name.errors }}</div>{% endif %}
+        </p>
+        <p>
+            {{ form.customer_last_name.label_tag }}<br>
+            {{ form.customer_last_name }}
+            {% if form.customer_last_name.errors %}<div class="errors">{{ form.customer_last_name.errors }}</div>{% endif %}
+        </p>
+        <p>
+            {{ form.phone.label_tag }}<br>
+            {{ form.phone }}
+            {% if form.phone.errors %}<div class="errors">{{ form.phone.errors }}</div>{% endif %}
+        </p>
     </fieldset>
 
+    <!-- Pet & Services -->
     <fieldset style="border:1px solid #e6e6e6; padding:12px; margin-bottom:12px;">
-      <legend>Pet & Service</legend>
-      <p>
-        {{ form.pet_name.label_tag }}<br>
-        {{ form.pet_name }}
-        {% if form.pet_name.errors %}<div class="errors">{{ form.pet_name.errors }}</div>{% endif %}
-      </p>
-
-      <p>
-        {{ form.services.label_tag }}<br>
-        {{ form.services }}
-        {% if form.services.errors %}<div class="errors">{{ form.services.errors }}</div>{% endif %}
-      </p>
+        <legend>Pet & Service</legend>
+        <p>
+            {{ form.pet_name.label_tag }}<br>
+            {{ form.pet_name }}
+            {% if form.pet_name.errors %}<div class="errors">{{ form.pet_name.errors }}</div>{% endif %}
+        </p>
+        <p>
+            {{ form.services.label_tag }}<br>
+            {{ form.services }}
+            {% if form.services.errors %}<div class="errors">{{ form.services.errors }}</div>{% endif %}
+        </p>
     </fieldset>
 
+    <!-- Appointment Selection -->
     <fieldset style="border:1px solid #e6e6e6; padding:12px; margin-bottom:12px;">
-      <legend>Appointment</legend>
-      <p>
-        {{ form.groomer.label_tag }}<br>
-        {{ form.groomer }}
-        {% if form.groomer.errors %}<div class="errors">{{ form.groomer.errors }}</div>{% endif %}
-      </p>
+        <legend>Appointment</legend>
 
-      <p>
-        {{ form.appointment_date.label_tag }}<br>
-        {{ form.appointment_date }}
-        {% if form.appointment_date.errors %}<div class="errors">{{ form.appointment_date.errors }}</div>{% endif %}
-      </p>
+        <h4>Select Groomer</h4>
+        <div id="groomer-buttons">
+            {% for id, name in form.groomer.field.choices %}
+                <button type="button" class="groomer-btn" data-id="{{ id }}">{{ name }}</button>
+            {% endfor %}
+        </div>
 
-      <p>
-        {{ form.appointment_time.label_tag }}<br>
-        {{ form.appointment_time }}
-        {% if form.appointment_time.errors %}<div class="errors">{{ form.appointment_time.errors }}</div>{% endif %}
-      </p>
+        <p>
+            {{ form.appointment_date.label_tag }}<br>
+            {{ form.appointment_date }}
+            {% if form.appointment_date.errors %}<div class="errors">{{ form.appointment_date.errors }}</div>{% endif %}
+        </p>
+
+        <h4>Select Time</h4>
+        <div id="time-buttons"></div>
+
+        <!-- Hidden inputs to submit selected groomer and time -->
+        <input type="hidden" name="groomer" id="selected-groomer">
+        <input type="hidden" name="appointment_time" id="selected-time">
     </fieldset>
 
     <p>
-      <button type="submit" class="btn">Submit booking</button>
-      <a href="{% url 'booking:list' %}" style="margin-left:12px;">Cancel</a>
+        <button type="submit" class="btn">Submit booking</button>
+        <a href="{% url 'booking:list' %}" style="margin-left:12px;">Cancel</a>
     </p>
-  </form>
+</form>
+
+<!-- JavaScript to handle clickable buttons and dynamic availability -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const groomerBtns = document.querySelectorAll('.groomer-btn');
+    const dateInput = document.getElementById('id_appointment_date');
+    const timeButtonsContainer = document.getElementById('time-buttons');
+    const hiddenGroomer = document.getElementById('selected-groomer');
+    const hiddenTime = document.getElementById('selected-time');
+
+    let selectedGroomer = null;
+    let selectedTime = null;
+
+    // Handle groomer selection
+    groomerBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            groomerBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedGroomer = btn.dataset.id;
+            hiddenGroomer.value = selectedGroomer;
+            updateTimeButtons();
+        });
+    });
+
+    // Update time buttons when groomer or date changes
+    dateInput.addEventListener('change', updateTimeButtons);
+
+    function updateTimeButtons() {
+        const date = dateInput.value;
+        if (!selectedGroomer || !date) return;
+
+        fetch(`/booking/availability/?groomer=${selectedGroomer}&date=${date}`)
+            .then(resp => resp.json())
+            .then(data => {
+                const allTimes = {{ all_time_slots|safe }};
+                timeButtonsContainer.innerHTML = '';
+                selectedTime = null;
+                hiddenTime.value = '';
+
+                allTimes.forEach(t => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = t;
+                    btn.className = 'time-btn';
+                    if (data.booked.includes(t)) {
+                        btn.disabled = true;
+                        btn.style.opacity = 0.5;
+                    }
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        selectedTime = t;
+                        hiddenTime.value = t;
+                    });
+                    timeButtonsContainer.appendChild(btn);
+                });
+            });
+    }
+});
+</script>
+
+<!-- Styles for clickable buttons -->
+<style>
+.groomer-btn, .time-btn {
+    margin: 4px;
+    padding: 8px 12px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+}
+.groomer-btn.selected, .time-btn.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+.time-btn:disabled {
+    cursor: not-allowed;
+    background-color: #ddd;
+}
+</style>
+
 {% endblock %}
