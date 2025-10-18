@@ -130,6 +130,20 @@ def bookings_list(request):
 
 def booking_detail(request, pk):
     booking = get_object_or_404(Booking.objects.select_related('customer'), pk=pk)
+    
+    api = ApiClient()
+
+    # Map groomer ID to name
+    groomers = {str(g['id']): g['name'] for g in api.list_groomers()}
+    booking.groomer_name = groomers.get(str(booking.groomer_id), "—")
+
+    # Map service IDs to names
+    services_lookup = {str(s['id']): s['name'] for s in api.list_services()}
+    booking.services_names = [services_lookup.get(str(sid), f"Service {sid}") for sid in booking.services]
+
+    # Do NOT expose raw API response
+    
+
     return render(request, 'booking/booking_detail.html', {'booking': booking})
 
 def availability_json(request):

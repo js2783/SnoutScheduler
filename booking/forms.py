@@ -2,6 +2,7 @@ from django import forms
 from .models import Booking
 from .api import ApiClient
 from django.core.exceptions import ValidationError
+import re
 
 class BookingForm(forms.Form):
     customer_first_name = forms.CharField(max_length=50)
@@ -34,6 +35,13 @@ class BookingForm(forms.Form):
             return int(g)
         except (TypeError, ValueError):
             raise ValidationError("Invalid groomer selection.")
+        
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '')
+        digits = re.sub(r'\D', '', phone)  # Remove everything except digits
+        if len(digits) < 10 or len(digits) > 11:
+            raise ValidationError("Phone number must have 10–11 digits.") #Only allows for the user to input a proper phone number
+        return digits  
 
     def clean(self):
         cleaned = super().clean()

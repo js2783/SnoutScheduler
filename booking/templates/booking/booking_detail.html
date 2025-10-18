@@ -1,4 +1,5 @@
 {% extends "booking/base.html" %}
+
 {% block title %}Booking {{ booking.id }} - Scout Scheduler{% endblock %}
 
 {% block content %}
@@ -6,31 +7,71 @@
   <p><a href="{% url 'booking:list' %}">← Back to list</a></p>
 
   <table style="max-width:720px;">
-    <tr><th style="text-align:left; width:180px;">Customer</th><td>{% if booking.customer %}{{ booking.customer.first_name }} {{ booking.customer.last_name }}{% else %}Unknown{% endif %}</td></tr>
-    <tr><th style="text-align:left;">Phone</th><td>{% if booking.customer %}{{ booking.customer.phone }}{% else %}—{% endif %}</td></tr>
-    <tr><th style="text-align:left;">Pet</th><td>{{ booking.pet_name|default:"—" }}</td></tr>
-    <tr><th style="text-align:left;">Date</th><td>{{ booking.appointment_date|date:"Y-m-d" }}</td></tr>
-    <tr><th style="text-align:left;">Time</th><td>{{ booking.appointment_time }}</td></tr>
-    <tr><th style="text-align:left;">Groomer ID</th><td>{{ booking.groomer_id|default:"—" }}</td></tr>
-    <tr><th style="text-align:left; vertical-align:top;">Services</th>
+    <tr>
+      <th style="text-align:left; width:180px;">Customer</th>
       <td>
-        {% if booking.services %}
-          <ul>
-            {% for s in booking.services %}
-              <li>
-                {% if s.name %}{{ s.name }} (id: {{ s.id }}){% else %}{{ s }}{% endif %}
-              </li>
-            {% endfor %}
-          </ul>
+        {% if booking.customer %}
+          {{ booking.customer.first_name }} {{ booking.customer.last_name }}
         {% else %}
-          —  
+          Unknown
         {% endif %}
       </td>
     </tr>
-    <tr><th style="text-align:left;">API Ref</th><td>{{ booking.api_ref|default:"—" }}</td></tr>
-    <tr><th style="text-align:left;">Created</th><td>{{ booking.created_at }}</td></tr>
-  </table>
 
-  <h3 style="margin-top:18px;">Raw API response</h3>
-  <pre style="background:#f8f8f8; padding:12px; border:1px solid #eee;">{{ booking.api_response|default:"{}" }}</pre>
+    <tr>
+      <th style="text-align:left;">Phone</th>
+      <td>
+        {% if booking.customer %}
+          {{ booking.customer.phone }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left;">Pet</th>
+      <td>{{ booking.pet_name|default:"—" }}</td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left;">Date</th>
+      <td>{{ booking.appointment_date|date:"Y-m-d" }}</td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left;">Time</th>
+      <td>{{ booking.appointment_time }}</td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left;">Groomer</th>
+      <td>{{ booking.groomer_name|default:"—" }}</td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left; vertical-align:top;">Services</th>
+      <td>
+        {% if booking.services_names %}
+          <ul>
+            {% for s in booking.services_names %}
+              <li>{{ s }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left;">API Ref</th>
+      <td>{{ booking.api_ref|default:"—" }}</td>
+    </tr>
+
+    <tr>
+      <th style="text-align:left;">Created</th>
+      <td>{{ booking.created_at }}</td>
+    </tr>
+  </table>
 {% endblock %}
