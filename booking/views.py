@@ -1,13 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from .forms import BookingForm
 from .api import ApiClient
 from .models import Customer, Booking
 from django.db import transaction
-from django.shortcuts import render, get_object_or_404
-from .models import Booking, Customer
 from django.core.paginator import Paginator
-from datetime import date
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
