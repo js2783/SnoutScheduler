@@ -33,7 +33,9 @@ Your server should be running. You'll see a link in the terminal after "Starting
 
 ## Navigating the Interface
 The first thing you will see is the bookings page. Here is the list of scheduled appointments, showing the customer name, phone number, pet name, date, time, reference ID, and actions to view or delete entry. You will also see a big green button to create new booking. Let's click that next.
+![SnoutScheduler home page](<readme assets/home_page.png>)
 
 ## New Booking Page
 Here you will see many fields that need to be filled with customer, pet, and time information. Go ahead and fill out the fields with the correct information, carefully selecting the time and date that works for you!\
 After filling out all fields, click 'Submit Booking' at the bottom of the page to save your appointment. The newly created appointment will now appear on the home page.
+![SnoutScheduler booking page](<readme assets/booking_page.png>)
